@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Crypto Monitoring Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-dark: #0a1930;
+            --primary: #152642;
+            --secondary: #1e3a5c;
+            --accent: #2557a7;
+            --text: #f0f6fc;
+            --yellow: #ffd700;
+            --neon-green: #39ff14;
+            --neon-red: #ff073a;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--primary-dark);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+            color: var(--yellow);
+        }
+        
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+        
+        /* Ticker Styles */
+        .ticker-container {
+            background: var(--primary);
+            padding: 12px 0;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 100%;
+            animation: ticker-scroll 120s linear infinite;
+        }
+        
+        .ticker-item {
+            display: inline-block;
+            padding: 0 25px;
+            font-size: 1.1rem;
+        }
+        
+        .coin-name {
+            font-weight: bold;
+            color: var(--yellow);
+        }
+        
+        .coin-price {
+            margin: 0 10px;
+        }
+        
+        .positive {
+            color: var(--neon-green);
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.7);
+        }
+        
+        .negative {
+            color: var(--neon-red);
+            text-shadow: 0 0 5px rgba(255, 7, 58, 0.7);
+        }
+        
+        /* Navigation */
+        nav {
+            background: var(--secondary);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        nav li a {
+            color: var(--text);
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+            display: block;
+        }
+        
+        nav li a:hover {
+            background: var(--accent);
+            box-shadow: 0 0 15px rgba(37, 87, 167, 0.5);
+        }
+        
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(to bottom right, var(--primary), var(--secondary));
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card h2 {
+            color: var(--yellow);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Dominance Section */
+        .dominance-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .dominance-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .dominance-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        /* Coin Grid */
+        .coin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .coin-card {
+            background: linear-gradient(to bottom right, var(--secondary), var(--primary));
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .coin-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* News Section */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .news-card {
+            background: linear-gradient(to bottom right, var(--secondary), var(--primary));
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .news-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--yellow);
+        }
+        
+        .news-date {
+            font-size: 0.9rem;
+            color: rgba(240, 246, 252, 0.7);
+            margin-bottom: 15px;
+        }
+        
+        /* System Health */
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .health-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress {
+            height: 100%;
+            border-radius: 5px;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Animations */
+        @keyframes ticker-scroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 5px var(--neon-green);
+            }
+            50% {
+                box-shadow: 0 0 20px var(--neon-green);
+            }
+            100% {
+                box-shadow: 0 0 5px var(--neon-green);
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .dominance-container {
+                grid-template-columns: 1fr;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .coin-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .ticker-item {
+                padding: 0 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <h1>AI Crypto Monitoring Dashboard</h1>
+                </div>
+                <div class="system-status">
+                    <span class="status-indicator"></span>
+                    <span>SYSTEM STATUS: ONLINE</span>
+                </div>
+            </div>
+            <div class="header-content">
+                <div class="system-status">
+                    <i class="fas fa-microchip"></i>
+                    <span>AI HELPERS: 12 ACTIVE</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="ticker-container">
+            <div class="ticker-wrap">
+                <div class="ticker">
+                    <!-- Ticker items will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <nav>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#dominance">Dominance</a></li>
+                <li><a href="#monitored-coins">Monitored Coins</a></li>
+                <li><a href="#influencers">Influencers</a></li>
+                <li><a href="#predictions">Predictions</a></li>
+                <li><a href="#news">News</a></li>
+                <li><a href="#system-health">System Health</a></li>
+            </ul>
+        </nav>
+        
+        <section id="overview" class="card">
+            <h2><i class="fas fa-chart-line"></i> Market Overview</h2>
+            <div class="dashboard">
+                <div class="card">
+                    <h3>Total Market Cap</h3>
+                    <p class="dominance-value">$2.36T</p>
+                    <p class="positive"><i class="fas fa-arrow-up"></i> 1.8% (24H)</p>
+                </div>
+                <div class="card">
+                    <h3>24H Volume</h3>
+                    <p class="dominance-value">$108.5B</p>
+                    <p class="positive"><i class="fas fa-arrow-up"></i> 3.2%</p>
+                </div>
+                <div class="card">
+                    <h3>Active Coins</h3>
+                    <p class="dominance-value">12,437</p>
+                    <p>+14 new (7D)</p>
+                </div>
+                <div class="card">
+                    <h3>Fear & Greed Index</h3>
+                    <p class="dominance-value">74</p>
+                    <p class="positive">Greed</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="dominance" class="card">
+            <h2><i class="fas fa-chart-pie"></i> BTC & ETH Dominance</h2>
+            <div class="dominance-container">
+                <div class="dominance-card">
+                    <h3>BTC Dominance</h3>
+                    <p class="dominance-value">51.8%</p>
+                    <p class="negative"><i class="fas fa-arrow-down"></i> 0.7% (7D)</p>
+                    <div class="chart-container">
+                        <canvas id="btc-dominance-chart"></canvas>
+                    </div>
+                </div>
+                <div class="dominance-card">
+                    <h3>ETH Dominance</h3>
+                    <p class="dominance-value">17.2%</p>
+                    <p class="positive"><i class="fas fa-arrow-up"></i> 0.3% (7D)</p>
+                    <div class="chart-container">
+                        <canvas id="eth-dominance-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="monitored-coins" class="card">
+            <h2><i class="fas fa-coins"></i> Monitored Altcoins</h2>
+            <p>Special focus on: WIF, FIL, BONK, Cardano, Monero, Tron and 12,000+ others</p>
+            <div class="coin-grid" id="coin-grid">
+                <!-- Coin cards will be dynamically inserted here -->
+            </div>
+        </section>
+        
+        <section id="influencers" class="card">
+            <h2><i class="fas fa-user-friends"></i> Influencer Watch</h2>
+            <p>Monitoring public statements and investments of key influencers</p>
+            <div class="coin-grid">
+                <div class="coin-card">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzI1NTdhNyIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmQ3MDAiPkVNPC90ZXh0Pjwvc3ZnPg==" alt="Elon Musk" width="80">
+                    <h3>Elon Musk</h3>
+                    <p>Monitoring: DOGE, BTC</p>
+                    <p class="positive">Last mention: 2 hours ago</p>
+                </div>
+                <div class="coin-card">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzI1NTdhNyIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmQ3MDAiPlRydW1wPC90ZXh0Pjwvc3ZnPg==" alt="Donald Trump" width="80">
+                    <h3>Donald Trump</h3>
+                    <p>Monitoring: TRUMP, BTC</p>
+                    <p class="positive">Last mention: 5 hours ago</p>
+                </div>
+                <div class="coin-card">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzI1NTdhNyIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmQ3MDAiPkN6PC90ZXh0Pjwvc3ZnPg==" alt="Changpeng Zhao" width="80">
+                    <h3>Changpeng Zhao</h3>
+                    <p>Monitoring: BNB, BTC</p>
+                    <p>Last mention: 1 day ago</p>
+                </div>
+                <div class="coin-card">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzI1NTdhNyIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZmQ3MDAiPlNBPC90ZXh0Pjwvc3ZnPg==" alt="Satoshi Nakamoto" width="80">
+                    <h3>Satoshi Nakamoto</h3>
+                    <p>Monitoring: BTC</p>
+                    <p class="negative">Last active: Years ago</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="predictions" class="card">
+            <h2><i class="fas fa-robot"></i> AI Breakout Predictions</h2>
+            <p>Synthetic intelligence predictions for potential breakout coins</p>
+            <div class="coin-grid" id="predictions-container">
+                <!-- Predictions will be dynamically inserted here -->
+            </div>
+        </section>
+        
+        <section id="news" class="card">
+            <h2><i class="fas fa-newspaper"></i> Latest Crypto News</h2>
+            <p>AI-curated news from top sources</p>
+            <div class="news-grid" id="news-container">
+                <!-- News cards will be dynamically inserted here -->
+            </div>
+        </section>
+        
+        <section id="system-health" class="card">
+            <h2><i class="fas fa-heartbeat"></i> System Health & Diagnostics</h2>
+            <div class="health-grid">
+                <div class="health-card">
+                    <h3>AI Model Training</h3>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 85%; background: var(--neon-green);"></div>
+                    </div>
+                    <p>Status: <span class="positive">Active</span></p>
+                    <p>Last retrained: Today, 08:45 AM</p>
+                </div>
+                <div class="health-card">
+                    <h3>Data Feed Status</h3>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 92%; background: var(--neon-green);"></div>
+                    </div>
+                    <p>Real-time data: <span class="positive">Stable</span></p>
+                    <p>API Connections: <span class="positive">12/12 Active</span></p>
+                </div>
+                <div class="health-card">
+                    <h3>Resource Usage</h3>
+                    <p>CPU: <span class="positive">12%</span></p>
+                    <p>Memory: <span class="positive">47%</span></p>
+                    <p>Disk: <span class="positive">32%</span></p>
+                </div>
+                <div class="health-card">
+                    <h3>Network Health</h3>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 98%; background: var(--neon-green);"></div>
+                    </div>
+                    <p>Latency: <span class="positive">18ms</span></p>
+                    <p>Uptime: <span class="positive">99.98%</span></p>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>AI Crypto Monitoring Dashboard • Synthetic Intelligence System • Version 2.1</p>
+            <p>This is a self-healing system with AI helpers that continuously updates and improves itself</p>
+        </footer>
+    </div>
+
+    <script>
+        // System initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing AI Crypto Monitoring System...');
+            initializeSystem();
+            startDataFeeds();
+            updateSystemMetrics();
+        });
+
+        // System configuration
+        const config = {
+            updateInterval: 30000, // 30 seconds
+            retrainInterval: 3600000, // 1 hour
+            monitoredCoins: ['bitcoin', 'ethereum', 'dogwifhat', 'filecoin', 'bonk', 'cardano', 'monero', 'tron'],
+            influencers: ['elonmusk', 'donaldtrump', 'cz_binance']
+        };
+
+        // Initialize system
+        function initializeSystem() {
+            // Initialize charts
+            initCharts();
+            
+            // Start the system uptime counter
+            startUptimeCounter();
+            
+            // Load initial data
+            loadInitialData();
+            
+            // Populate ticker
+            populateTicker();
+            
+            console.log('System initialized successfully');
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // BTC Dominance Chart
+            const btcCtx = document.getElementById('btc-dominance-chart').getContext('2d');
+            window.btcDominanceChart = new Chart(btcCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'BTC Dominance (%)',
+                        data: Array.from({length: 24}, () => Math.random() * 3 + 50),
+                        borderColor: '#ffd700',
+                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 49,
+                            max: 53
+                        }
+                    }
+                }
+            });
+            
+            // ETH Dominance Chart
+            const ethCtx = document.getElementById('eth-dominance-chart').getContext('2d');
+            window.ethDominanceChart = new Chart(ethCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'ETH Dominance (%)',
+                        data: Array.from({length: 24}, () => Math.random() * 1 + 16.5),
+                        borderColor: '#39ff14',
+                        backgroundColor: 'rgba(57, 255, 20, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 16,
+                            max: 18
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate ticker with coin data
+        function populateTicker() {
+            const ticker = document.querySelector('.ticker');
+            const coins = [
+                {name: 'BTC', price: 57432, change: 2.5},
+                {name: 'ETH', price: 3287, change: 1.8},
+                {name: 'WIF', price: 2.34, change: 18.7},
+                {name: 'FIL', price: 8.76, change: -3.2},
+                {name: 'BONK', price: 0.00002347, change: 12.4},
+                {name: 'ADA', price: 0.87, change: 1.2},
+                {name: 'XMR', price: 168.32, change: -1.7},
+                {name: 'TRX', price: 0.12, change: 0.8},
+                {name: 'SOL', price: 142.56, change: 4.3},
+                {name: 'XRP', price: 0.54, change: -0.6},
+                {name: 'DOT', price: 7.25, change: 2.1},
+                {name: 'DOGE', price: 0.17, change: 5.7},
+                {name: 'AVAX', price: 35.89, change: 3.4},
+                {name: 'LINK', price: 17.82, change: -1.2},
+                {name: 'MATIC', price: 0.75, change: 0.9},
+                {name: 'BNB', price: 586.32, change: 1.5},
+            ];
+            
+            coins.forEach(coin => {
+                const tickerItem = document.createElement('div');
+                tickerItem.className = 'ticker-item';
+                
+                const changeClass = coin.change >= 0 ? 'positive' : 'negative';
+                const changeIcon = coin.change >= 0 ? '↗' : '↘';
+                
+                tickerItem.innerHTML = `
+                    <span class="coin-name">${coin.name}</span>
+                    <span class="coin-price">$${coin.price.toLocaleString()}</span>
+                    <span class="${changeClass}">${changeIcon} ${Math.abs(coin.change)}%</span>
+                `;
+                
+                ticker.appendChild(tickerItem);
+            });
+        }
+
+        // Start data feeds
+        function startDataFeeds() {
+            // Simulated real-time data updates
+            setInterval(() => {
+                updateMarketData();
+                updatePredictions();
+                updateNews();
+            }, config.updateInterval);
+            
+            // Simulated model retraining
+            setInterval(() => {
+                retrainModels();
+            }, config.retrainInterval);
+        }
+
+        // Load initial data
+        function loadInitialData() {
+            // Simulated API call to get initial data
+            simulateAPICall('/market-data', (data) => {
+                populateCoinGrid(data);
+            });
+            
+            // Simulated API call to get predictions
+            simulateAPICall('/predictions', (data) => {
+                displayPredictions(data.predictions);
+            });
+            
+            // Simulated API call to get news
+            simulateAPICall('/news', (data) => {
+                displayNews(data.news);
+            });
+        }
+
+        // Update market data
+        function updateMarketData() {
+            simulateAPICall('/market-data/update', (data) => {
+                updateCoinGrid(data);
+                updateCharts(data);
+                
+                // Check for breakouts
+                checkForBreakouts(data);
+            });
+        }
+
+        // Update predictions
+        function updatePredictions() {
+            simulateAPICall('/predictions/update', (data) => {
+                displayPredictions(data.predictions);
+            });
+        }
+        
+        // Update news
+        function updateNews() {
+            simulateAPICall('/news/update', (data) => {
+                displayNews(data.news);
+            });
+        }
+
+        // Update charts
+        function updateCharts(data) {
+            // Update BTC dominance chart
+            const newBtcData = window.btcDominanceChart.data.datasets[0].data.slice(1);
+            newBtcData.push(data.btcDominance);
+            window.btcDominanceChart.data.datasets[0].data = newBtcData;
+            window.btcDominanceChart.update();
+            
+            // Update ETH dominance chart
+            const newEthData = window.ethDominanceChart.data.datasets[0].data.slice(1);
+            newEthData.push(data.ethDominance);
+            window.ethDominanceChart.data.datasets[0].data = newEthData;
+            window.ethDominanceChart.update();
+        }
+
+        // Retrain models
+        function retrainModels() {
+            console.log('Retraining AI models...');
+            simulateAPICall('/models/retrain', (data) => {
+                showNotification('AI models successfully retrained with latest market data');
+            });
+        }
+
+        // Populate coin grid with data
+        function populateCoinGrid(data) {
+            const coinGrid = document.getElementById('coin-grid');
+            coinGrid.innerHTML = '';
+            
+            data.coins.forEach(coin => {
+                const changeClass = coin.change24h >= 0 ? 'positive' : 'negative';
+                const changeIcon = coin.change24h >= 0 ? '↗' : '↘';
+                
+                const coinCard = document.createElement('div');
+                coinCard.className = 'coin-card';
+                coinCard.innerHTML = `
+                    <h3>${coin.name} (${coin.symbol.toUpperCase()})</h3>
+                    <p>$${coin.price.toLocaleString()}</p>
+                    <p class="${changeClass}">${changeIcon} ${Math.abs(coin.change24h)}%</p>
+                    <p>Market Cap: $${coin.marketCap.toLocaleString()}</p>
+                `;
+                
+                coinGrid.appendChild(coinCard);
+            });
+        }
+
+        // Display predictions
+        function displayPredictions(predictions) {
+            const container = document.getElementById('predictions-container');
+            container.innerHTML = '';
+            
+            predictions.forEach(prediction => {
+                const predictionEl = document.createElement('div');
+                predictionEl.className = 'coin-card';
+                
+                const confidenceWidth = Math.min(100, Math.max(0, prediction.confidence * 100));
+                const directionClass = prediction.direction === 'up' ? 'positive' : 'negative';
+                
+                predictionEl.innerHTML = `
+                    <h3>${prediction.coin} (${prediction.symbol})</h3>
+                    <p>Prediction: <strong class="${directionClass}">${prediction.direction.toUpperCase()}</strong></p>
+                    <p>Expected change: ${prediction.expectedChange}%</p>
+                    <p>Timeframe: ${prediction.timeframe}</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: ${confidenceWidth}%; background: var(--neon-green);"></div>
+                    </div>
+                    <p>Confidence: ${Math.round(confidenceWidth)}%</p>
+                `;
+                
+                container.appendChild(predictionEl);
+            });
+        }
+        
+        // Display news
+        function displayNews(news) {
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+            
+            news.forEach(item => {
+                const newsEl = document.createElement('div');
+                newsEl.className = 'news-card';
+                
+                newsEl.innerHTML = `
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-date">${item.date} • ${item.source}</div>
+                    <p>${item.summary}</p>
+                `;
+                
+                container.appendChild(newsEl);
+            });
+        }
+
+        // Check for breakouts
+        function checkForBreakouts(data) {
+            // Simple logic to simulate breakout detection
+            data.coins.forEach(coin => {
+                if (Math.abs(coin.change24h) > 15) {
+                    showNotification(`Potential breakout detected for ${coin.name} (${coin.symbol}) with ${coin.change24h}% change in 24h`);
+                }
+            });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '15px';
+            notification.style.background = 'var(--secondary)';
+            notification.style.color = 'var(--text)';
+            notification.style.borderRadius = '8px';
+            notification.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+            notification.style.zIndex = '1000';
+            notification.style.borderLeft = '4px solid var(--neon-green)';
+            
+            notification.innerHTML = `
+                <strong>Breakout Alert!</strong>
+                <p>${message}</p>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Update system metrics
+        function updateSystemMetrics() {
+            // Simulate resource usage updates
+            setInterval(() => {
+                // In a real system, we would fetch actual resource usage
+            }, 10000);
+        }
+
+        // Start uptime counter
+        function startUptimeCounter() {
+            let seconds = 0;
+            setInterval(() => {
+                seconds++;
+                // In a real system, we would update a uptime display
+            }, 1000);
+        }
+
+        // Simulate API calls
+        function simulateAPICall(endpoint, callback) {
+            // Simulate network delay
+            setTimeout(() => {
+                let response;
+                
+                switch(endpoint) {
+                    case '/market-data':
+                        response = generateMarketData();
+                        break;
+                    case '/market-data/update':
+                        response = generateMarketDataUpdate();
+                        break;
+                    case '/predictions':
+                        response = generatePredictions();
+                        break;
+                    case '/predictions/update':
+                        response = generatePredictionsUpdate();
+                        break;
+                    case '/news':
+                        response = generateNews();
+                        break;
+                    case '/news/update':
+                        response = generateNewsUpdate();
+                        break;
+                    case '/models/retrain':
+                        response = { status: 'success' };
+                        break;
+                    default:
+                        response = {};
+                }
+                
+                callback(response);
+            }, 1000);
+        }
+
+        // Generate mock market data
+        function generateMarketData() {
+            const coins = [
+                { name: 'Bitcoin', symbol: 'btc', price: 57432, change24h: 2.5, marketCap: 1100000000000 },
+                { name: 'Ethereum', symbol: 'eth', price: 3287, change24h: 1.8, marketCap: 395000000000 },
+                { name: 'Dogwifhat', symbol: 'wif', price: 2.34, change24h: 18.7, marketCap: 234000000 },
+                { name: 'Filecoin', symbol: 'fil', price: 8.76, change24h: -3.2, marketCap: 4210000000 },
+                { name: 'Bonk', symbol: 'bonk', price: 0.00002347, change24h: 12.4, marketCap: 1500000000 },
+                { name: 'Cardano', symbol: 'ada', price: 0.87, change24h: 1.2, marketCap: 31000000000 },
+                { name: 'Monero', symbol: 'xmr', price: 168.32, change24h: -1.7, marketCap: 3040000000 },
+                { name: 'Tron', symbol: 'trx', price: 0.12, change24h: 0.8, marketCap: 10400000000 }
+            ];
+            
+            return { 
+                coins,
+                btcDominance: 51.2 + (Math.random() - 0.5) * 0.8,
+                ethDominance: 17.2 + (Math.random() - 0.5) * 0.3
+            };
+        }
+
+        // Generate market data update
+        function generateMarketDataUpdate() {
+            const data = generateMarketData();
+            
+            // Apply random changes to simulate market movement
+            data.coins = data.coins.map(coin => {
+                return {
+                    ...coin,
+                    price: coin.price * (1 + (Math.random() - 0.5) * 0.05),
+                    change24h: coin.change24h + (Math.random() - 0.5) * 3,
+                    marketCap: coin.marketCap * (1 + (Math.random() - 0.5) * 0.05)
+                };
+            });
+            
+            return data;
+        }
+
+        // Generate predictions
+        function generatePredictions() {
+            return {
+                predictions: [
+                    { coin: 'Dogwifhat', symbol: 'WIF', direction: 'up', expectedChange: 28.7, confidence: 0.82, timeframe: '24-48 hours' },
+                    { coin: 'Filecoin', symbol: 'FIL', direction: 'up', expectedChange: 15.3, confidence: 0.76, timeframe: '3-5 days' },
+                    { coin: 'Bonk', symbol: 'BONK', direction: 'up', expectedChange: 42.1, confidence: 0.88, timeframe: '12-24 hours' },
+                    { coin: 'Cardano', symbol: 'ADA', direction: 'up', expectedChange: 12.5, confidence: 0.68, timeframe: '5-7 days' }
+                ]
+            };
+        }
+
+        // Generate predictions update
+        function generatePredictionsUpdate() {
+            const data = generatePredictions();
+            
+            // Apply random changes to predictions
+            data.predictions = data.predictions.map(pred => {
+                return {
+                    ...pred,
+                    expectedChange: pred.expectedChange * (1 + (Math.random() - 0.5) * 0.2),
+                    confidence: Math.min(0.95, Math.max(0.6, pred.confidence + (Math.random() - 0.5) * 0.1))
+                };
+            });
+            
+            return data;
+        }
+        
+        // Generate news
+        function generateNews() {
+            return {
+                news: [
+                    { title: 'Bitcoin ETF Approval Expected Soon', date: 'May 15, 2023', source: 'CryptoNews', summary: 'Industry experts predict SEC approval for Bitcoin ETFs within the next month, which could drive significant institutional investment.' },
+                    { title: 'Ethereum Foundation Announces Major Upgrade', date: 'May 14, 2023', source: 'Blockchain Daily', summary: 'The Ethereum Foundation has revealed plans for a significant network upgrade that will improve scalability and reduce gas fees.' },
+                    { title: 'Elon Musk Tweets About Dogecoin Again', date: 'May 13, 2023', source: 'Twitter', summary: 'Elon Musk has once again tweeted about Dogecoin, causing a 15% price surge within minutes of the tweet.' }
+                ]
+            };
+        }
+        
+        // Generate news update
+        function generateNewsUpdate() {
+            return generateNews();
+        }
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                window.scrollTo({
+                    top: targetElement.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
